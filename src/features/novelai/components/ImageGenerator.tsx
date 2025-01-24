@@ -1,20 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NovelAIService } from '../api';
-import { NovelAIConfig, NovelAIParameters } from '../types';
-import { DEFAULT_PARAMETERS } from '../constants';
+import { NovelAIConfig } from '../types';
+import { open } from '@tauri-apps/plugin-dialog';
 
 interface ImageGeneratorProps {
   config: NovelAIConfig;
 }
 
+const SAVE_PATH_KEY = 'novelai-save-path';
+
 export function ImageGenerator({ config }: ImageGeneratorProps) {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [parameters, setParameters] = useState<NovelAIParameters>(DEFAULT_PARAMETERS);
+  const [savePath, setSavePath] = useState<string | null>(null);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const novelAI = new NovelAIService(config);
+
+  // 載入儲存的路徑
+  useEffect(() => {
+    const savedPath = localStorage.getItem(SAVE_PATH_KEY);
+    if (savedPath) {
+      setSavePath(savedPath);
+    }
+  }, []);
+
+  const handleSelectFolder = async () => {
+    try {
+      const selectedPath = await open({
+        directory: true,
+        multiple: false,
+        title: '選擇儲存資料夾'
+      });
+
+      if (selectedPath) {
+        setSavePath(selectedPath as string);
+        localStorage.setItem(SAVE_PATH_KEY, selectedPath as string);
+      }
+    } catch (error) {
+      console.error('Error selecting folder:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +49,9 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
 
     try {
       const result = await novelAI.generateImage({
-        input: prompt,
-        parameters: {
-          ...parameters,
-          seed: parameters.seed || Math.floor(Math.random() * 999999999)
-        }
+        input: prompt
+      }, {
+        savePath: savePath || undefined
       });
 
       if (result.success) {
@@ -51,15 +75,8 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
     }
   };
 
-  const handleParameterChange = (key: keyof NovelAIParameters, value: any) => {
-    setParameters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label 
@@ -79,111 +96,27 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
           />
         </div>
 
-        <div>
+        <div className="flex items-center justify-between">
+          <div className="flex-1 mr-4">
+            <p className="text-sm text-gray-600">
+              儲存位置: {savePath || '尚未選擇'}
+            </p>
+          </div>
           <button
             type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            onClick={handleSelectFolder}
+            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800"
           >
-            {showAdvanced ? '隱藏進階設定' : '顯示進階設定'}
+            選擇資料夾
           </button>
         </div>
 
-        {showAdvanced && (
-          <div className="space-y-4 border-t pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  寬度
-                </label>
-                <input
-                  type="number"
-                  value={parameters.width}
-                  onChange={(e) => handleParameterChange('width', parseInt(e.target.value))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="64"
-                  max="1024"
-                  step="64"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  高度
-                </label>
-                <input
-                  type="number"
-                  value={parameters.height}
-                  onChange={(e) => handleParameterChange('height', parseInt(e.target.value))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="64"
-                  max="1024"
-                  step="64"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                採樣器
-              </label>
-              <select
-                value={parameters.sampler}
-                onChange={(e) => handleParameterChange('sampler', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              >
-                <option value="k_euler_ancestral">k_euler_ancestral</option>
-                <option value="k_euler">k_euler</option>
-                <option value="ddim">ddim</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                步數
-              </label>
-              <input
-                type="number"
-                value={parameters.steps}
-                onChange={(e) => handleParameterChange('steps', parseInt(e.target.value))}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                min="1"
-                max="50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                種子
-              </label>
-              <input
-                type="number"
-                value={parameters.seed}
-                onChange={(e) => handleParameterChange('seed', parseInt(e.target.value))}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                placeholder="留空為隨機"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                負面提示詞
-              </label>
-              <textarea
-                value={parameters.negative_prompt}
-                onChange={(e) => handleParameterChange('negative_prompt', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                rows={3}
-              />
-            </div>
-          </div>
-        )}
-
         <button
           type="submit"
-          disabled={isLoading || !prompt.trim()}
+          disabled={isLoading || !prompt.trim() || !savePath}
           className={`
             w-full px-4 py-2 rounded-md text-white font-medium
-            ${isLoading || !prompt.trim() 
+            ${isLoading || !prompt.trim() || !savePath
               ? 'bg-gray-400 cursor-not-allowed' 
               : 'bg-blue-600 hover:bg-blue-700'}
           `}

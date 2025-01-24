@@ -40,6 +40,10 @@ export interface NovelAIConfig {
   authToken: string;
 }
 
+export interface GenerateImageOptions {
+  savePath?: string;  // 儲存路徑
+}
+
 export interface GenerateImageResult {
   success: boolean;
   imagePath?: string;
