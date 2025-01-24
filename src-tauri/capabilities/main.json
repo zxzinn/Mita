@@ -1,0 +1,25 @@
+[
+  {
+    "identifier": "main-capability",
+    "description": "Main capability for the application",
+    "local": true,
+    "windows": ["main"],
+    "permissions": [
+      "fs:default",
+      "fs:allow-write-file",
+      "fs:allow-read-file",
+      "fs:allow-download-write",
+      "fs:allow-download-write-recursive",
+      "fs:allow-picture-write",
+      "fs:allow-picture-write-recursive",
+      "fs:scope-download",
+      "fs:scope-picture",
+      "dialog:default",
+      "dialog:allow-open",
+      "dialog:allow-save",
+      "http:default",
+      "http:allow-fetch",
+      "http:allow-fetch-read-body"
+    ]
+  }
+]
