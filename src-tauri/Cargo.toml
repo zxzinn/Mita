@@ -11,12 +11,15 @@ edition = "2021"
 tauri-build = { version = "2.0.0-beta.9", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-beta.11", features = [] }
+tauri = { version = "2.0.0-beta.11", features = ["protocol-asset"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tauri-plugin-fs = "2.0.0-beta.2"
+tauri-plugin-fs = { version = "2.0.0-beta.2", features = ["watch"] }
 tauri-plugin-dialog = "2.0.0-beta.2"
 tauri-plugin-http = "2.0.0-beta.2"
+notify = "6.1.1"
+tokio = { version = "1.35.1", features = ["full"] }
+walkdir = "2.4.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

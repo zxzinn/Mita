@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ImageGenerator } from './features/novelai/components/ImageGenerator';
+import { ImageViewer } from './features/novelai/components/ImageViewer';
 import { NovelAIConfig } from './features/novelai/types';
 
 function App() {
@@ -58,19 +59,31 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8">
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">NovelAI 圖片生成器</h1>
-              <button
-                onClick={() => setIsConfigured(false)}
-                className="text-sm text-gray-600 hover:text-gray-800"
-              >
-                修改設定
-              </button>
+      <div className="max-w-7xl mx-auto py-8 px-4">
+        <div className="space-y-8">
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">NovelAI 圖片生成器</h1>
+                <button
+                  onClick={() => setIsConfigured(false)}
+                  className="text-sm text-gray-600 hover:text-gray-800"
+                >
+                  修改設定
+                </button>
+              </div>
+              <ImageGenerator config={config} />
             </div>
-            <ImageGenerator config={config} />
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">圖片預覽</h2>
+                <p className="text-gray-600 mt-1">查看生成的圖片</p>
+              </div>
+              <ImageViewer />
+            </div>
           </div>
         </div>
       </div>

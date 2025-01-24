@@ -1,24 +1,28 @@
-[
-  {
-    "identifier": "main-capability",
-    "description": "Main capability for the application",
-    "local": true,
-    "windows": ["main"],
-    "permissions": [
-      "core:default",
-      "core:path:default",
-      "core:path:allow-join",
-      "fs:default",
-      "fs:allow-write-file",
-      "fs:allow-read-file",
-      "fs:scope-download",
-      "fs:scope-picture",
-      "dialog:default",
-      "dialog:allow-open",
-      "dialog:allow-save",
-      "http:default",
-      "http:allow-fetch",
-      "http:allow-fetch-read-body"
-    ]
-  }
-]
+{
+  "identifier": "main-capability",
+  "description": "Main capability for the application",
+  "local": true,
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-write-file",
+    "fs:allow-read-file",
+    "fs:allow-read-dir",
+    "fs:allow-desktop-write",
+    "fs:allow-desktop-read",
+    "fs:allow-desktop-write-recursive",
+    "fs:allow-desktop-read-recursive",
+    "fs:allow-download-write",
+    "fs:allow-download-read",
+    "fs:allow-download-write-recursive",
+    "fs:allow-download-read-recursive",
+    "fs:allow-picture-write",
+    "fs:allow-picture-read",
+    "fs:allow-picture-write-recursive",
+    "fs:allow-picture-read-recursive",
+    "http:default"
+  ],
+  "platforms": ["linux", "macOS", "windows"]
+}
