@@ -145,8 +145,8 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsLoading(true);
-    setResult(null);
-
+    // 不再清除之前的圖片結果，保留直到新圖片生成成功
+    
     try {
       console.log('開始生成圖片...');
       
