@@ -9,6 +9,7 @@ interface ImageGeneratorProps {
 }
 
 const MODEL_OPTIONS = [
+  'nai-diffusion-4-full',
   'nai-diffusion-3',
   'nai-diffusion-2',
   'safe-diffusion'
