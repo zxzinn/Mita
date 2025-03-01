@@ -362,17 +362,34 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
         </div>
       </div>
 
-      {/* 中間預覽區域 */}
-      <div className="flex-1 h-full p-4 flex items-center justify-center bg-gray-50">
-        <div className="w-full h-full flex items-center justify-center overflow-hidden">
+      {/* 中間預覽區域 - 使用固定高度和寬度 */}
+      <div className="flex-1 h-full p-4 flex items-center justify-center">
+        {/* 固定大小的預覽容器 */}
+        <div className="w-[500px] h-[500px] bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
           {result?.imagePath ? (
-            <img
-              src={convertFileSrc(result.imagePath)}
-              alt="生成的圖片"
-              className="max-w-full max-h-full object-contain"
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img
+                src={convertFileSrc(result.imagePath)}
+                alt="生成的圖片"
+                className="max-w-full max-h-full object-contain"
+              />
+              <button 
+                className="absolute bottom-4 right-4 bg-gray-800 bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-opacity"
+                onClick={() => {
+                  if (result.imagePath) {
+                    // 在新窗口中打開圖片
+                    window.open(convertFileSrc(result.imagePath), '_blank');
+                  }
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+              </button>
+            </div>
           ) : (
-            <div className="text-gray-400 text-center">
+            <div className="text-gray-400 text-center p-8">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
