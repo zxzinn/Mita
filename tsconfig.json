@@ -21,10 +21,11 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Paths */
+    "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
       "@tauri-apps/api/*": ["./node_modules/@tauri-apps/api/*"]
-    },
-    "baseUrl": "."
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
