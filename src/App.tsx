@@ -9,14 +9,14 @@ function App() {
     authToken: ''
   });
 
-  const [isConfigured, setIsConfigured] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   const handleConfigSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsConfigured(true);
+    setShowConfig(false);
   };
 
-  if (!isConfigured) {
+  if (showConfig) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
@@ -36,21 +36,23 @@ function App() {
                 onChange={(e) => setConfig(prev => ({ ...prev, authToken: e.target.value }))}
                 className="w-full p-2 border border-gray-300 rounded-md"
                 placeholder="輸入你的 NovelAI 授權金鑰"
-                required
               />
             </div>
-            <button
-              type="submit"
-              disabled={!config.authToken}
-              className={`
-                w-full px-4 py-2 rounded-md text-white font-medium
-                ${!config.authToken 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-blue-600 hover:bg-blue-700'}
-              `}
-            >
-              確認
-            </button>
+            <div className="flex space-x-2">
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700"
+              >
+                確認
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowConfig(false)}
+                className="px-4 py-2 rounded-md text-gray-700 font-medium border border-gray-300 hover:bg-gray-50"
+              >
+                取消
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -66,10 +68,10 @@ function App() {
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">NovelAI 圖片生成器</h1>
                 <button
-                  onClick={() => setIsConfigured(false)}
-                  className="text-sm text-gray-600 hover:text-gray-800"
+                  onClick={() => setShowConfig(true)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
                 >
-                  修改設定
+                  設定 API 金鑰
                 </button>
               </div>
               <ImageGenerator config={config} />

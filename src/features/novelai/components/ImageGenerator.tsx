@@ -176,8 +176,30 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
     setSeed(Math.floor(Math.random() * 999999999));
   };
 
+  // 檢查是否設置了授權金鑰
+  const isApiKeySet = !!config.authToken;
+
   return (
     <div className="flex flex-col h-full">
+      {/* API 金鑰未設置的提示 */}
+      {!isApiKeySet && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">尚未設置 API 金鑰</h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>請點擊頁面上方的「設定 API 金鑰」按鈕來設置您的 NovelAI 授權金鑰，才能使用圖片生成功能。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 上方提示詞區域 */}
       <div className="w-full p-4 space-y-4">
         <div>
@@ -194,7 +216,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
             rows={3}
             placeholder="輸入圖片生成提示詞..."
-            disabled={isLoading}
+            disabled={isLoading || !isApiKeySet}
           />
         </div>
 
@@ -212,7 +234,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
             rows={2}
             placeholder="輸入反向提示詞..."
-            disabled={isLoading}
+            disabled={isLoading || !isApiKeySet}
           />
         </div>
       </div>
@@ -229,7 +251,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               value={model}
               onChange={(e) => setModel(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             >
               {MODEL_OPTIONS.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -245,7 +267,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               value={action}
               onChange={(e) => setAction(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             >
               {ACTION_OPTIONS.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -261,7 +283,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               value={sampler}
               onChange={(e) => setSampler(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             >
               {SAMPLER_OPTIONS.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -277,7 +299,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               value={noiseSchedule}
               onChange={(e) => setNoiseSchedule(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             >
               {NOISE_SCHEDULE_OPTIONS.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -314,7 +336,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 min="64"
                 max="1024"
                 step="64"
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               />
             </div>
             <div>
@@ -329,7 +351,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 min="64"
                 max="1024"
                 step="64"
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               />
             </div>
           </div>
@@ -345,7 +367,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               className="w-full"
               min="1"
               max="100"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             />
           </div>
 
@@ -360,7 +382,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               className="w-full"
               min="1"
               max="50"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             />
           </div>
 
@@ -374,7 +396,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               onChange={(e) => setCfgRescale(Number(e.target.value))}
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
               step="0.05"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             />
           </div>
 
@@ -389,7 +411,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
               min="0"
               max="3"
-              disabled={isLoading}
+              disabled={isLoading || !isApiKeySet}
             />
           </div>
 
@@ -406,13 +428,13 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 min="0"
                 max="999999999"
                 placeholder="隨機"
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               />
               <button
                 type="button"
                 onClick={handleRandomSeed}
                 className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-600 rounded-md"
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               >
                 🎲
               </button>
@@ -425,7 +447,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 type="checkbox"
                 checked={qualityToggle}
                 onChange={(e) => setQualityToggle(e.target.checked)}
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               />
               <span className="text-sm text-gray-700">品質優化</span>
             </label>
@@ -435,7 +457,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 type="checkbox"
                 checked={sm}
                 onChange={(e) => setSm(e.target.checked)}
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               />
               <span className="text-sm text-gray-700">SM</span>
             </label>
@@ -445,7 +467,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 type="checkbox"
                 checked={smDyn}
                 onChange={(e) => setSmDyn(e.target.checked)}
-                disabled={isLoading}
+                disabled={isLoading || !isApiKeySet}
               />
               <span className="text-sm text-gray-700">SM Dyn</span>
             </label>
@@ -465,6 +487,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
             type="button"
             onClick={handleSelectFolder}
             className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+            disabled={!isApiKeySet}
           >
             選擇資料夾
           </button>
@@ -472,10 +495,10 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
 
         <button
           onClick={handleSubmit}
-          disabled={isLoading || !prompt.trim() || !savePath}
+          disabled={isLoading || !prompt.trim() || !savePath || !isApiKeySet}
           className={`
             w-full px-4 py-2 rounded-md text-white font-medium
-            ${isLoading || !prompt.trim() || !savePath
+            ${isLoading || !prompt.trim() || !savePath || !isApiKeySet
               ? 'bg-gray-400 cursor-not-allowed' 
               : 'bg-blue-600 hover:bg-blue-700'}
           `}
