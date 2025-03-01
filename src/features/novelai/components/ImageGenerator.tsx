@@ -203,10 +203,10 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
   const isApiKeySet = !!config.authToken;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full">
       {/* API 金鑰未設置的提示 */}
       {!isApiKeySet && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+        <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -223,129 +223,78 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
         </div>
       )}
 
-      {/* 上方提示詞區域 */}
-      <div className="w-full p-4 space-y-4">
-        <div>
-          <label 
-            htmlFor="prompt" 
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            提示詞
-          </label>
-          <textarea
-            id="prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-            rows={3}
-            placeholder="輸入圖片生成提示詞..."
-            disabled={isLoading || !isApiKeySet}
-          />
-        </div>
-
-        <div>
-          <label 
-            htmlFor="negativePrompt" 
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            反向提示詞
-          </label>
-          <textarea
-            id="negativePrompt"
-            value={negativePrompt}
-            onChange={(e) => setNegativePrompt(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-            rows={2}
-            placeholder="輸入反向提示詞..."
-            disabled={isLoading || !isApiKeySet}
-          />
-        </div>
-      </div>
-
-      {/* 主要內容區域 */}
-      <div className="flex flex-1 p-4 gap-4">
-        {/* 左側參數 */}
-        <div className="w-1/4 space-y-4">
+      {/* 左側面板：提示詞和控制區域 */}
+      <div className="w-1/4 h-full p-4 overflow-y-auto flex flex-col">
+        <div className="space-y-4 flex-1">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              模型
-            </label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading || !isApiKeySet}
+            <label 
+              htmlFor="prompt" 
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
-              {MODEL_OPTIONS.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              動作
+              提示詞
             </label>
-            <select
-              value={action}
-              onChange={(e) => setAction(e.target.value)}
+            <textarea
+              id="prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+              rows={6}
+              placeholder="輸入圖片生成提示詞..."
               disabled={isLoading || !isApiKeySet}
-            >
-              {ACTION_OPTIONS.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              採樣器
-            </label>
-            <select
-              value={sampler}
-              onChange={(e) => setSampler(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading || !isApiKeySet}
-            >
-              {SAMPLER_OPTIONS.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              雜訊排程
-            </label>
-            <select
-              value={noiseSchedule}
-              onChange={(e) => setNoiseSchedule(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-              disabled={isLoading || !isApiKeySet}
-            >
-              {NOISE_SCHEDULE_OPTIONS.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* 中間預覽區域 */}
-        <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-lg">
-          {result?.imagePath ? (
-            <img
-              src={convertFileSrc(result.imagePath)}
-              alt="生成的圖片"
-              className="max-w-full max-h-full object-contain"
             />
-          ) : (
-            <div className="text-gray-400">圖片預覽區域</div>
-          )}
-        </div>
+          </div>
 
-        {/* 右側參數 */}
-        <div className="w-1/4 space-y-4">
+          <div>
+            <label 
+              htmlFor="negativePrompt" 
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              反向提示詞
+            </label>
+            <textarea
+              id="negativePrompt"
+              value={negativePrompt}
+              onChange={(e) => setNegativePrompt(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+              rows={4}
+              placeholder="輸入反向提示詞..."
+              disabled={isLoading || !isApiKeySet}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                模型
+              </label>
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                disabled={isLoading || !isApiKeySet}
+              >
+                {MODEL_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                動作
+              </label>
+              <select
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                disabled={isLoading || !isApiKeySet}
+              >
+                {ACTION_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -377,6 +326,96 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 disabled={isLoading || !isApiKeySet}
               />
             </div>
+          </div>
+        </div>
+
+        {/* 底部控制區域 */}
+        <div className="mt-4 space-y-4">
+          {savePath && (
+            <p className="text-sm text-gray-600">
+              圖片將儲存至應用程式專屬資料夾
+            </p>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading || !prompt.trim() || !savePath || !isApiKeySet}
+            className={`
+              w-full px-4 py-2 rounded-md text-white font-medium
+              ${isLoading || !prompt.trim() || !savePath || !isApiKeySet
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'}
+            `}
+          >
+            {isLoading ? '生成中...' : '生成圖片'}
+          </button>
+
+          {result && (
+            <div 
+              className={`p-4 rounded-md ${
+                result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+              }`}
+            >
+              {result.message}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 中間預覽區域 */}
+      <div className="flex-1 h-full p-4 flex items-center justify-center bg-gray-50">
+        <div className="w-full h-full flex items-center justify-center overflow-hidden">
+          {result?.imagePath ? (
+            <img
+              src={convertFileSrc(result.imagePath)}
+              alt="生成的圖片"
+              className="max-w-full max-h-full object-contain"
+            />
+          ) : (
+            <div className="text-gray-400 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p>圖片預覽區域</p>
+              <p className="text-sm mt-2">生成圖片後將顯示在此處</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 右側參數區域 */}
+      <div className="w-1/4 h-full p-4 overflow-y-auto">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              採樣器
+            </label>
+            <select
+              value={sampler}
+              onChange={(e) => setSampler(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+              disabled={isLoading || !isApiKeySet}
+            >
+              {SAMPLER_OPTIONS.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              雜訊排程
+            </label>
+            <select
+              value={noiseSchedule}
+              onChange={(e) => setNoiseSchedule(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+              disabled={isLoading || !isApiKeySet}
+            >
+              {NOISE_SCHEDULE_OPTIONS.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -496,38 +535,6 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
             </label>
           </div>
         </div>
-      </div>
-
-      {/* 底部控制區域 */}
-      <div className="p-4 space-y-4">
-        {savePath && (
-          <p className="text-sm text-gray-600">
-            圖片將儲存至應用程式專屬資料夾
-          </p>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={isLoading || !prompt.trim() || !savePath || !isApiKeySet}
-          className={`
-            w-full px-4 py-2 rounded-md text-white font-medium
-            ${isLoading || !prompt.trim() || !savePath || !isApiKeySet
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700'}
-          `}
-        >
-          {isLoading ? '生成中...' : '生成圖片'}
-        </button>
-
-        {result && (
-          <div 
-            className={`mt-4 p-4 rounded-md ${
-              result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-            }`}
-          >
-            {result.message}
-          </div>
-        )}
       </div>
     </div>
   );
