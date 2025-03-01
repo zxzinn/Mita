@@ -75,6 +75,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [savePath, setSavePath] = useState<string | null>(null);
   const [result, setResult] = useState<{ success: boolean; message: string; imagePath?: string } | null>(null);
+  const [autoGenerate, setAutoGenerate] = useState(false); // 自動生成模式狀態
 
   // 生成參數
   const [action, setAction] = useState<string>('generate');
@@ -141,8 +142,8 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
     getAppImageDir();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsLoading(true);
     setResult(null);
 
@@ -221,6 +222,28 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
       });
     } finally {
       setIsLoading(false);
+      
+      // 如果自動生成模式開啟且當前生成成功，則在短暫延遲後自動觸發下一次生成
+      if (autoGenerate && result?.success) {
+        // 保存當前的自動生成狀態到一個變量中
+        const currentAutoGenerateRef = autoGenerate;
+        
+        // 創建一個定時器ID，以便我們可以在需要時清除它
+        const timerId = setTimeout(() => {
+          // 獲取最新的自動生成狀態
+          const isStillAutoGenerating = currentAutoGenerateRef && document.querySelector('[data-auto-generate="true"]') !== null;
+          
+          if (isStillAutoGenerating) {
+            handleSubmit();
+          }
+        }, 1000); // 1秒延遲，避免過快請求
+        
+        // 將定時器ID添加到DOM元素上，以便我們可以在用戶關閉自動生成時清除它
+        const autoGenButton = document.querySelector('[data-auto-generate]');
+        if (autoGenButton) {
+          autoGenButton.setAttribute('data-timer-id', timerId.toString());
+        }
+      }
     }
   };
 
@@ -366,18 +389,52 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
             </p>
           )}
 
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading || !prompt.trim() || !savePath || !isApiKeySet}
-            className={`
-              w-full px-4 py-2 rounded-md text-white font-medium
-              ${isLoading || !prompt.trim() || !savePath || !isApiKeySet
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'}
-            `}
-          >
-            {isLoading ? '生成中...' : '生成圖片'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading || !prompt.trim() || !savePath || !isApiKeySet}
+              className={`
+                flex-1 px-4 py-2 rounded-md text-white font-medium
+                ${isLoading || !prompt.trim() || !savePath || !isApiKeySet
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'}
+              `}
+            >
+              {isLoading ? '生成中...' : '生成圖片'}
+            </button>
+            
+            {/* 自動生成按鈕 */}
+            <button
+              className={`
+                px-3 py-2 rounded-md border
+                ${autoGenerate
+                  ? 'bg-blue-100 border-blue-500 text-blue-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'}
+                ${(!prompt.trim() || !savePath || !isApiKeySet) ? 'opacity-50 cursor-not-allowed' : ''}
+              `}
+              onClick={() => {
+                // 如果當前是自動生成狀態，則需要清除定時器
+                if (autoGenerate) {
+                  // 獲取定時器ID
+                  const timerIdAttr = document.querySelector('[data-auto-generate="true"]')?.getAttribute('data-timer-id');
+                  if (timerIdAttr) {
+                    const timerId = parseInt(timerIdAttr);
+                    // 清除定時器
+                    clearTimeout(timerId);
+                  }
+                }
+                // 切換自動生成狀態
+                setAutoGenerate(!autoGenerate);
+              }}
+              disabled={!prompt.trim() || !savePath || !isApiKeySet}
+              title={autoGenerate ? "關閉自動生成" : "開啟自動生成"}
+              data-auto-generate={autoGenerate.toString()}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
 
           {result && (
             <div 
@@ -402,7 +459,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
                 alt="生成的圖片"
                 className="max-w-full max-h-full object-contain"
               />
-              <button 
+              <button
                 className="absolute bottom-4 right-4 bg-gray-800 bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-opacity"
                 onClick={() => {
                   if (result.imagePath) {
