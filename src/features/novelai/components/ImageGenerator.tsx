@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { NovelAIService } from '../api';
 import { NovelAIConfig, NovelAIParameters } from '../types';
-import { open } from '@tauri-apps/plugin-dialog';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core';
 
 interface ImageGeneratorProps {
   config: NovelAIConfig;
 }
-
-const SAVE_PATH_KEY = 'novelai-save-path';
 
 const MODEL_OPTIONS = [
   'nai-diffusion-3',
@@ -94,29 +92,31 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
 
   const novelAI = new NovelAIService(config);
 
-  useEffect(() => {
-    const savedPath = localStorage.getItem(SAVE_PATH_KEY);
-    if (savedPath) {
-      setSavePath(savedPath);
-    }
-  }, []);
-
-  const handleSelectFolder = async () => {
+  // 獲取應用程序圖片目錄
+  const getAppImageDir = async () => {
     try {
-      const selectedPath = await open({
-        directory: true,
-        multiple: false,
-        title: '選擇儲存資料夾'
-      });
-
-      if (selectedPath) {
-        setSavePath(selectedPath as string);
-        localStorage.setItem(SAVE_PATH_KEY, selectedPath as string);
-      }
+      console.log('正在獲取應用程序圖片目錄...');
+      const appImageDir = await invoke<string>('get_app_image_dir');
+      console.log('獲取應用程序圖片目錄成功:', appImageDir);
+      setSavePath(appImageDir);
+      return appImageDir;
     } catch (error) {
-      console.error('Error selecting folder:', error);
+      console.error('獲取應用程序圖片目錄時發生錯誤:', error);
+      if (error instanceof Error) {
+        console.error('錯誤訊息:', error.message);
+        console.error('錯誤堆疊:', error.stack);
+      } else {
+        console.error('未知錯誤類型:', typeof error);
+        console.error('錯誤內容:', JSON.stringify(error));
+      }
+      return null;
     }
   };
+
+  useEffect(() => {
+    // 獲取應用程序圖片目錄
+    getAppImageDir();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +124,16 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
     setResult(null);
 
     try {
+      console.log('開始生成圖片...');
+      
+      // 如果沒有保存路徑，則獲取應用程序圖片目錄
+      const currentSavePath = savePath || await getAppImageDir();
+      if (!currentSavePath) {
+        throw new Error('無法獲取保存路徑');
+      }
+      
+      console.log('使用保存路徑:', currentSavePath);
+
       const parameters: NovelAIParameters = {
         ...DEFAULT_PARAMETERS,
         width,
@@ -141,28 +151,41 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
         negative_prompt: negativePrompt,
       };
 
+      console.log('調用NovelAI API生成圖片...');
       const result = await novelAI.generateImage({
         input: prompt,
         model,
         action: action as 'generate',
         parameters
       }, {
-        savePath: savePath || undefined
+        savePath: currentSavePath
       });
+
+      console.log('NovelAI API返回結果:', result);
 
       if (result.success) {
         setResult({
           success: true,
-          message: `圖片已儲存至: ${result.imagePath}`,
+          message: `圖片已生成成功`,
           imagePath: result.imagePath
         });
       } else {
+        console.error('生成圖片失敗:', result.error);
         setResult({
           success: false,
           message: result.error || '生成圖片時發生錯誤'
         });
       }
     } catch (error) {
+      console.error('生成圖片時發生異常:', error);
+      if (error instanceof Error) {
+        console.error('錯誤訊息:', error.message);
+        console.error('錯誤堆疊:', error.stack);
+      } else {
+        console.error('未知錯誤類型:', typeof error);
+        console.error('錯誤內容:', JSON.stringify(error));
+      }
+      
       setResult({
         success: false,
         message: error instanceof Error ? error.message : '發生未知錯誤'
@@ -477,21 +500,11 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
 
       {/* 底部控制區域 */}
       <div className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 mr-4">
-            <p className="text-sm text-gray-600">
-              儲存位置: {savePath || '尚未選擇'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSelectFolder}
-            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800"
-            disabled={!isApiKeySet}
-          >
-            選擇資料夾
-          </button>
-        </div>
+        {savePath && (
+          <p className="text-sm text-gray-600">
+            圖片將儲存至應用程式專屬資料夾
+          </p>
+        )}
 
         <button
           onClick={handleSubmit}

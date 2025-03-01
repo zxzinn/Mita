@@ -22,7 +22,16 @@
     "fs:allow-picture-read",
     "fs:allow-picture-write-recursive",
     "fs:allow-picture-read-recursive",
+    "fs:scope",
     "http:default"
   ],
-  "platforms": ["linux", "macOS", "windows"]
+  "platforms": ["linux", "macOS", "windows"],
+  "fs": {
+    "scope": {
+      "allow": [
+        "$HOME/.nai-app-v3/images",
+        "$USERPROFILE/.nai-app-v3/images"
+      ]
+    }
+  }
 }
