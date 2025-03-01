@@ -3,6 +3,7 @@ import { NovelAIService } from '../api';
 import { NovelAIConfig, NovelAIParameters } from '../types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { invoke } from '@tauri-apps/api/core';
+import { modelConfigManager, ModelType } from '../modelConfig';
 
 interface ImageGeneratorProps {
   config: NovelAIConfig;
@@ -37,6 +38,7 @@ const NOISE_SCHEDULE_OPTIONS = [
   'polyexponential'
 ] as const;
 
+// 默認參數，確保包含所有必需字段
 const DEFAULT_PARAMETERS: NovelAIParameters = {
   params_version: 3,
   width: 832,
@@ -48,8 +50,6 @@ const DEFAULT_PARAMETERS: NovelAIParameters = {
   n_samples: 1,
   ucPreset: 0,
   qualityToggle: true,
-  sm: false,
-  sm_dyn: false,
   dynamic_thresholding: false,
   controlnet_strength: 1,
   legacy: false,
@@ -70,6 +70,7 @@ const DEFAULT_PARAMETERS: NovelAIParameters = {
 export function ImageGenerator({ config }: ImageGeneratorProps) {
   // 基本參數
   const [prompt, setPrompt] = useState('');
+  const [model, setModel] = useState<ModelType>('nai-diffusion-3');
   const [negativePrompt, setNegativePrompt] = useState(DEFAULT_PARAMETERS.negative_prompt);
   const [isLoading, setIsLoading] = useState(false);
   const [savePath, setSavePath] = useState<string | null>(null);
@@ -77,7 +78,6 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
 
   // 生成參數
   const [action, setAction] = useState<string>('generate');
-  const [model, setModel] = useState<string>('nai-diffusion-3');
   const [width, setWidth] = useState(DEFAULT_PARAMETERS.width);
   const [height, setHeight] = useState(DEFAULT_PARAMETERS.height);
   const [scale, setScale] = useState(DEFAULT_PARAMETERS.scale);
@@ -87,11 +87,33 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
   const [cfgRescale, setCfgRescale] = useState(DEFAULT_PARAMETERS.cfg_rescale);
   const [noiseSchedule, setNoiseSchedule] = useState(DEFAULT_PARAMETERS.noise_schedule);
   const [qualityToggle, setQualityToggle] = useState(DEFAULT_PARAMETERS.qualityToggle);
-  const [sm, setSm] = useState(DEFAULT_PARAMETERS.sm);
-  const [smDyn, setSmDyn] = useState(DEFAULT_PARAMETERS.sm_dyn);
+  const [sm, setSm] = useState(false);
+  const [smDyn, setSmDyn] = useState(false);
   const [undesiredContent, setUndesiredContent] = useState(DEFAULT_PARAMETERS.ucPreset);
 
   const novelAI = new NovelAIService(config);
+
+  // 當模型變更時，更新參數
+  useEffect(() => {
+    const defaultParams = modelConfigManager.getDefaultParameters(model);
+    
+    // 更新參數
+    setScale(defaultParams.scale || 5);
+    setNegativePrompt(defaultParams.negative_prompt || '');
+    
+    // 根據模型設置特定參數
+    if (model === 'nai-diffusion-4-full') {
+      // NAI-4 特定設置
+      setSm(false);
+      setSmDyn(false);
+    } else {
+      // NAI-3 特定設置
+      setSm(defaultParams.sm || false);
+      setSmDyn(defaultParams.sm_dyn || false);
+    }
+    
+    console.log(`已切換到模型 ${model}，並更新相關參數`);
+  }, [model]);
 
   // 獲取應用程序圖片目錄
   const getAppImageDir = async () => {
@@ -135,7 +157,8 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
       
       console.log('使用保存路徑:', currentSavePath);
 
-      const parameters: NovelAIParameters = {
+      // 構建參數，使用默認參數作為基礎，確保包含所有必需字段
+      const parameters = {
         ...DEFAULT_PARAMETERS,
         width,
         height,
@@ -145,12 +168,17 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
         seed: seed ?? Math.floor(Math.random() * 999999999),
         ucPreset: undesiredContent,
         qualityToggle,
-        sm,
-        sm_dyn: smDyn,
         cfg_rescale: cfgRescale,
         noise_schedule: noiseSchedule,
         negative_prompt: negativePrompt,
+        characterPrompts: [],  // 默認為空數組
       };
+
+      // 根據模型添加特定參數
+      if (model !== 'nai-diffusion-4-full') {
+        parameters.sm = sm;
+        parameters.sm_dyn = smDyn;
+      }
 
       console.log('調用NovelAI API生成圖片...');
       const result = await novelAI.generateImage({
@@ -270,7 +298,7 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               </label>
               <select
                 value={model}
-                onChange={(e) => setModel(e.target.value)}
+                onChange={(e) => setModel(e.target.value as ModelType)}
                 className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
                 disabled={isLoading || !isApiKeySet}
               >
@@ -532,25 +560,40 @@ export function ImageGenerator({ config }: ImageGeneratorProps) {
               <span className="text-sm text-gray-700">品質優化</span>
             </label>
 
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={sm}
-                onChange={(e) => setSm(e.target.checked)}
-                disabled={isLoading || !isApiKeySet}
-              />
-              <span className="text-sm text-gray-700">SM</span>
-            </label>
+            {/* 只在非NAI-4模型顯示SM選項 */}
+            {model !== 'nai-diffusion-4-full' && (
+              <>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={sm}
+                    onChange={(e) => setSm(e.target.checked)}
+                    disabled={isLoading || !isApiKeySet}
+                  />
+                  <span className="text-sm text-gray-700">SM</span>
+                </label>
 
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={smDyn}
-                onChange={(e) => setSmDyn(e.target.checked)}
-                disabled={isLoading || !isApiKeySet}
-              />
-              <span className="text-sm text-gray-700">SM Dyn</span>
-            </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={smDyn}
+                    onChange={(e) => setSmDyn(e.target.checked)}
+                    disabled={isLoading || !isApiKeySet}
+                  />
+                  <span className="text-sm text-gray-700">SM Dyn</span>
+                </label>
+              </>
+            )}
+          </div>
+
+          {/* 模型信息提示 */}
+          <div className="mt-6 p-3 bg-blue-50 rounded-md">
+            <h4 className="text-sm font-medium text-blue-800">當前模型: {model}</h4>
+            <p className="text-xs text-blue-600 mt-1">
+              {model === 'nai-diffusion-4-full' 
+                ? '使用NAI-4模型，支持高級字符提示和更好的圖像質量。' 
+                : '使用NAI-3模型，支持SM和SM Dyn選項。'}
+            </p>
           </div>
         </div>
       </div>

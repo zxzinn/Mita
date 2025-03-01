@@ -1,7 +1,8 @@
-import { NovelAIGenerateImageRequest, NovelAIConfig, GenerateImageResult, GenerateImageOptions } from './types';
+import { NovelAIGenerateImageRequest, NovelAIConfig, GenerateImageResult, GenerateImageOptions, NovelAIParameters, CharacterPrompt } from './types';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
 import JSZip from 'jszip';
+import { modelConfigManager, ModelType } from './modelConfig';
 
 export class NovelAIService {
   private config: NovelAIConfig;
@@ -25,45 +26,61 @@ export class NovelAIService {
       console.log('參數:', JSON.stringify(params, null, 2));
       console.log('選項:', JSON.stringify(options, null, 2));
       
+      // 獲取模型類型
+      const modelType = params.model as ModelType || 'nai-diffusion-3';
+      
+      // 提取字符提示（如果有）
+      const characterPrompts: CharacterPrompt[] = params.parameters?.characterPrompts || [];
+      
+      // 根據模型調整參數
+      const adaptedParameters = modelConfigManager.adaptParametersForModel(
+        modelType,
+        params.parameters || {},
+        params.input || '',
+        characterPrompts
+      );
+      
+      // 確保所有必需的參數都存在
+      const completeParameters: NovelAIParameters = {
+        params_version: 3,
+        width: 832,
+        height: 1216,
+        scale: 5,
+        sampler: 'k_euler_ancestral',
+        steps: 23,
+        seed: Math.floor(Math.random() * 999999999),
+        n_samples: 1,
+        ucPreset: 0,
+        qualityToggle: true,
+        dynamic_thresholding: false,
+        controlnet_strength: 1,
+        legacy: false,
+        add_original_image: true,
+        cfg_rescale: 0,
+        noise_schedule: 'karras',
+        legacy_v3_extend: false,
+        skip_cfg_above_sigma: null,
+        characterPrompts: [],
+        negative_prompt: "nsfw, lowres, {bad}, error, fewer, extra, missing, worst quality, jpeg artifacts, bad quality, watermark, unfinished, displeasing, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]",
+        reference_image_multiple: [],
+        reference_information_extracted_multiple: [],
+        reference_strength_multiple: [],
+        deliberate_euler_ancestral_bug: false,
+        prefer_brownian: true,
+        ...adaptedParameters
+      };
+      
       const request: NovelAIGenerateImageRequest = {
         input: params.input || '',
-        model: params.model || 'nai-diffusion-3',
+        model: modelType,
         action: 'generate',
-        parameters: {
-          params_version: 3,
-          width: 832,
-          height: 1216,
-          scale: 5,
-          sampler: 'k_euler_ancestral',
-          steps: 23,
-          seed: Math.floor(Math.random() * 999999999),
-          n_samples: 1,
-          ucPreset: 0,
-          qualityToggle: true,
-          sm: false,
-          sm_dyn: false,
-          dynamic_thresholding: false,
-          controlnet_strength: 1,
-          legacy: false,
-          add_original_image: true,
-          cfg_rescale: 0,
-          noise_schedule: 'karras',
-          legacy_v3_extend: false,
-          skip_cfg_above_sigma: null,
-          characterPrompts: [],
-          negative_prompt: "nsfw, lowres, {bad}, error, fewer, extra, missing, worst quality, jpeg artifacts, bad quality, watermark, unfinished, displeasing, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]",
-          reference_image_multiple: [],
-          reference_information_extracted_multiple: [],
-          reference_strength_multiple: [],
-          deliberate_euler_ancestral_bug: false,
-          prefer_brownian: true,
-          ...params.parameters
-        }
+        parameters: completeParameters
       };
 
       console.log('發送請求到 NovelAI API');
       console.log('API 端點:', this.config.apiEndpoint);
       console.log('授權金鑰長度:', this.config.authToken ? this.config.authToken.length : 0);
+      console.log('調整後的參數:', JSON.stringify(request.parameters, null, 2));
       
       const response = await fetch(this.config.apiEndpoint, {
         method: 'POST',

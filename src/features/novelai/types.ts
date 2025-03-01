@@ -16,8 +16,8 @@ export interface NovelAIParameters {
   n_samples: number;
   ucPreset: number;
   qualityToggle: boolean;
-  sm: boolean;
-  sm_dyn: boolean;
+  sm?: boolean;
+  sm_dyn?: boolean;
   dynamic_thresholding: boolean;
   controlnet_strength: number;
   legacy: boolean;
@@ -26,13 +26,41 @@ export interface NovelAIParameters {
   noise_schedule: string;
   legacy_v3_extend: boolean;
   skip_cfg_above_sigma: null;
-  characterPrompts: string[];
+  characterPrompts: CharacterPrompt[];  // NAI-4特有，但保留為必需字段，在API中會提供默認空數組
   negative_prompt: string;
   reference_image_multiple: string[];
   reference_information_extracted_multiple: any[];
   reference_strength_multiple: number[];
   deliberate_euler_ancestral_bug: boolean;
   prefer_brownian: boolean;
+  // NAI-4 特有欄位
+  v4_prompt?: V4Prompt;
+  v4_negative_prompt?: V4Prompt;
+  use_coords?: boolean;
+}
+
+export interface CharacterPrompt {
+  prompt: string;
+  uc?: string;
+  center?: {
+    x: number;
+    y: number;
+  };
+}
+
+export interface V4Prompt {
+  caption: {
+    base_caption: string;
+    char_captions: {
+      char_caption: string;
+      centers: {
+        x: number;
+        y: number;
+      }[];
+    }[];
+  };
+  use_coords?: boolean;
+  use_order?: boolean;
 }
 
 export interface NovelAIConfig {
